@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landmark Detection Techniques | Indoor Navigation Tutorial</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="nav-header">
+            <h2>Navigation</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Introduction</a></li>
+            <li><a href="sensors.html">Sensor Possibilities</a></li>
+            <li><a href="techniques.html" class="active">Detection Techniques</a></li>
+            <li><a href="context.html">Place Recognition</a></li>
+            <li><a href="review.html">Successes & Failures</a></li>
+            <li><a href="future.html">Challenges & Future</a></li>
+            <li><a href="bibliography.html">Bibliography</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <header class="page-header">
+            <h1>Landmark Detection Techniques</h1>
+            <p class="subtitle">Computer Vision Methods for Indoor Navigation</p>
+        </header>
+
+        <!-- AUDIO PLACEHOLDER: Add a voice track here summarizing the detection techniques -->
+        <div class="audio-container">
+            <audio controls>
+                <source src="audio/page3-techniques.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <p class="audio-caption">🔊 Audio Summary (2:30)</p>
+        </div>
+
+        <section class="techniques-section">
+            <h2>Overview of Detection Methodologies</h2>
+            <p>
+                Indoor navigation for blind users requires the detection and localization of diverse landmark types, each with distinct visual characteristics and spatial scales. This necessitates a multi-technique approach combining three complementary computer vision methodologies: <strong>object detection</strong> for large architectural landmarks, <strong>optical character recognition (OCR)</strong> for textual information, and <strong>keypoint detection</strong> for small interactive elements. This section provides graduate-level analysis of each technique, with emphasis on mobile-optimized implementations suitable for real-time smartphone deployment.
+            </p>
+
+            <div class="technique-analysis">
+                <h3>1. Object Detection: Localizing Large Landmarks</h3>
+                
+                <h4>Problem Formulation</h4>
+                <p>
+                    Object detection addresses the task of identifying and spatially localizing instances of predefined object categories within an image. For indoor navigation, target categories include doors, elevators, stairs, escalators, exit signs, and restroom indicators. The detector must output:
+                </p>
+                <ul>
+                    <li><strong>Class label:</strong> The category of detected object (e.g., "door", "elevator")</li>
+                    <li><strong>Bounding box:</strong> Spatial coordinates (x, y, width, height) defining the object's location in the image</li>
+                    <li><strong>Confidence score:</strong> Probability that the detection is correct</li>
+                </ul>
+
+                <h4>Lightweight Model Architectures</h4>
+                <p>
+                    Real-time mobile deployment imposes strict constraints on model size and computational complexity. Two architecture families dominate mobile object detection:
+                </p>
+
+                <h5>MobileNet-Based Detectors</h5>
+                <p>
+                    MobileNet architectures employ <strong>depthwise separable convolutions</strong> to dramatically reduce computational cost while maintaining accuracy <a href="bibliography.html#ref5" class="citation">[5]</a>. A standard convolution is factored into:
+                </p>
+                <ul>
+                    <li><strong>Depthwise convolution:</strong> Applies a single filter per input channel</li>
+                    <li><strong>Pointwise convolution:</strong> 1×1 convolution to combine channel outputs</li>
+                </ul>
+                <p>
+                    This factorization reduces computation by a factor of 8-9× compared to standard convolutions. MobileNetV2 and V3 further incorporate:
+                </p>
+                <ul>
+                    <li><strong>Inverted residual blocks:</strong> Expand-project structure that maintains information flow</li>
+                    <li><strong>Linear bottlenecks:</strong> Prevent information loss in low-dimensional representations</li>
+                    <li><strong>Squeeze-and-excitation blocks:</strong> Channel-wise attention mechanisms</li>
+                </ul>
+                <p>
+                    <strong>MobileNet-SSD</strong> (Single Shot Detector) combines MobileNet feature extraction with multi-scale detection heads, achieving 20-30 FPS on mobile devices with 5-10 MB model size.
+                </p>
+
+                <h5>YOLO-Nano and Lightweight YOLO Variants</h5>
+                <p>
+                    YOLO (You Only Look Once) architectures perform detection in a single forward pass, making them inherently fast. YOLO-Nano represents an extreme compression of the YOLO architecture optimized for mobile deployment:
+                </p>
+                <ul>
+                    <li><strong>Model size:</strong> 4-6 MB (compared to 200+ MB for full YOLOv3)</li>
+                    <li><strong>Inference speed:</strong> 25-40 FPS on mobile GPUs</li>
+                    <li><strong>Architecture:</strong> Reduced channel counts, fewer detection scales, and efficient activation functions</li>
+                </ul>
+
+                <div class="algorithm-box">
+                    <h4>Algorithm 1: YOLO-Nano Detection Pipeline for Indoor Landmarks</h4>
+                    <pre>
+INPUT: RGB image I (H × W × 3), depth map D (H × W)
+OUTPUT: Detected landmarks L = {(class, bbox, distance)}
+
+1. PREPROCESSING:
+   - Resize I to 416×416 (YOLO input size)
+   - Normalize pixel values to [0, 1]
+   - Convert to tensor format
+
+2. FEATURE EXTRACTION (Backbone):
+   FOR each layer l in [1..12]:  // Reduced from 53 in full YOLO
+       IF l uses depthwise separable convolution:
+           features[l] = DepthwiseConv(features[l-1])
+           features[l] = PointwiseConv(features[l])
+       ELSE:
+           features[l] = StandardConv(features[l-1])
+       features[l] = BatchNorm(features[l])
+       features[l] = LeakyReLU(features[l])
+
+3. MULTI-SCALE DETECTION (Detection Heads):
+   // Three detection scales for objects of different sizes
+   detections_large = DetectionHead(features[12])   // 13×13 grid, large objects
+   detections_medium = DetectionHead(features[9])   // 26×26 grid, medium objects
+   detections_small = DetectionHead(features[6])    // 52×52 grid, small objects
+
+4. PREDICTION DECODING:
+   FOR each detection scale s:
+       FOR each grid cell (i, j):
+           FOR each anchor box a:
+               // Each prediction: [x, y, w, h, confidence, class_probs]
+               pred = detections_s[i, j, a]
+               
+               // Decode bounding box coordinates
+               bbox.x = (sigmoid(pred.x) + i) / grid_width
+               bbox.y = (sigmoid(pred.y) + j) / grid_height
+               bbox.w = anchor_w[a] * exp(pred.w)
+               bbox.h = anchor_h[a] * exp(pred.h)
+               
+               // Compute confidence and class
+               confidence = sigmoid(pred.confidence)
+               class_id = argmax(softmax(pred.class_probs))
+               class_prob = max(softmax(pred.class_probs))
+               
+               final_score = confidence * class_prob
+               
+               IF final_score > threshold (e.g., 0.5):
+                   candidates.add((class_id, bbox, final_score))
+
+5. NON-MAXIMUM SUPPRESSION (NMS):
+   // Remove duplicate detections of same object
+   L = []
+   SORT candidates by final_score (descending)
+   WHILE candidates not empty:
+       best = candidates.pop_first()
+       L.add(best)
+       
+       // Remove overlapping detections
+       FOR each remaining candidate c:
+           IF IoU(best.bbox, c.bbox) > NMS_threshold (e.g., 0.4):
+               candidates.remove(c)
+
+6. DEPTH INTEGRATION:
+   FOR each detection (class, bbox, score) in L:
+       // Extract depth at bounding box center
+       center_x = bbox.x * W
+       center_y = bbox.y * H
+       
+       // Average depth in central region (robust to noise)
+       depth_region = D[center_y-10:center_y+10, center_x-10:center_x+10]
+       distance = median(depth_region)
+       
+       // Update detection with distance
+       detection.distance = distance
+
+7. RETURN L (detected landmarks with 3D positions)
+
+COMPUTATIONAL COMPLEXITY:
+- Feature extraction: ~0.5 GFLOPs (vs. 65 GFLOPs for full YOLOv3)
+- Detection heads: ~0.1 GFLOPs
+- Total: ~0.6 GFLOPs → 25-40 FPS on mobile GPU
+- Model parameters: ~1.5M (vs. 62M for YOLOv3)
+- Model size: 4-6 MB (quantized)
+                    </pre>
+                </div>
+
+                <h4>Training Considerations</h4>
+                <p>
+                    Effective deployment requires training on domain-specific data:
+                </p>
+                <ul>
+                    <li><strong>Dataset:</strong> 10,000+ annotated images of indoor landmarks from diverse buildings</li>
+                    <li><strong>Data augmentation:</strong> Rotation, brightness/contrast variation, motion blur simulation to improve robustness</li>
+                    <li><strong>Transfer learning:</strong> Initialize with COCO-pretrained weights, fine-tune on indoor landmarks</li>
+                    <li><strong>Class balancing:</strong> Oversample rare classes (e.g., elevators) to prevent bias toward common classes (doors)</li>
+                </ul>
+
+                <h4>Performance Metrics</h4>
+                <p>
+                    Typical performance for YOLO-Nano on indoor landmarks:
+                </p>
+                <ul>
+                    <li><strong>mAP (mean Average Precision):</strong> 75-85% at IoU threshold 0.5</li>
+                    <li><strong>Inference latency:</strong> 25-40 ms per frame on mobile GPU</li>
+                    <li><strong>Detection range:</strong> Reliable detection of doors up to 5-7 meters</li>
+                </ul>
+
+                <div class="figure">
+                    <img src="images/yolo-detection-example.jpg" alt="YOLO detection output showing bounding boxes on doors and elevator" style="max-width: 700px;">
+                    <p class="figure-caption">Figure 3: YOLO-Nano detection output in an office hallway, showing bounding boxes and confidence scores for detected doors and elevator. Processing time: 28 ms on Snapdragon 865 GPU.</p>
+                </div>
+            </div>
+
+            <div class="technique-analysis">
+                <h3>2. Text Recognition (OCR): Reading Room Numbers and Signage</h3>
+                
+                <h4>Problem Scope</h4>
+                <p>
+                    Optical Character Recognition (OCR) enables reading of textual information critical for navigation: room numbers, directional signs ("Exit", "Restroom"), and building directories. Unlike general OCR, navigation OCR must handle:
+                </p>
+                <ul>
+                    <li><strong>Varied fonts and sizes:</strong> From large exit signs to small room number plates</li>
+                    <li><strong>Perspective distortion:</strong> Text viewed at angles rather than frontally</li>
+                    <li><strong>Partial occlusion:</strong> Text partially blocked by people or objects</li>
+                    <li><strong>Variable lighting:</strong> Shadows, glare, and backlighting</li>
+                </ul>
+
+                <h4>Modern OCR Pipeline</h4>
+                <p>
+                    State-of-the-art mobile OCR systems employ a two-stage pipeline:
+                </p>
+
+                <h5>Stage 1: Text Detection</h5>
+                <p>
+                    Locates regions containing text within the image. Efficient methods include:
+                </p>
+                <ul>
+                    <li><strong>EAST (Efficient and Accurate Scene Text Detector):</strong> Single-shot detector that predicts text regions and their orientations</li>
+                    <li><strong>DB (Differentiable Binarization):</strong> Segments text regions using learnable thresholding</li>
+                </ul>
+                <p>
+                    These methods output oriented bounding boxes or polygons enclosing text regions.
+                </p>
+
+                <h5>Stage 2: Text Recognition</h5>
+                <p>
+                    Recognizes characters within detected text regions. Modern approaches use:
+                </p>
+                <ul>
+                    <li><strong>CRNN (Convolutional Recurrent Neural Network):</strong> CNN extracts features, RNN models character sequences</li>
+                    <li><strong>Attention-based models:</strong> Transformer architectures that attend to relevant image regions for each character</li>
+                    <li><strong>CTC (Connectionist Temporal Classification):</strong> Loss function that handles variable-length sequences without character-level alignment</li>
+                </ul>
+
+                <h4>Mobile-Optimized OCR: Google ML Kit and Tesseract</h4>
+                <p>
+                    For real-time mobile deployment, two frameworks dominate:
+                </p>
+                <ul>
+                    <li><strong>Google ML Kit Text Recognition:</strong> On-device neural network-based OCR optimized for mobile, supporting 100+ languages. Latency: 100-300 ms per frame.</li>
+                    <li><strong>Tesseract 4.0+:</strong> Open-source OCR with LSTM-based recognition. Slower (500-1000 ms) but highly accurate for clear text.</li>
+                </ul>
+
+                <h4>Application to Navigation</h4>
+                <p>
+                    OCR integration for navigation involves:
+                </p>
+                <ol>
+                    <li><strong>Region of Interest Selection:</strong> Apply OCR only to regions near detected landmarks (e.g., above detected doors) to reduce computation</li>
+                    <li><strong>Text Filtering:</strong> Use regular expressions to identify room numbers (e.g., "Room 301", "3-101") vs. general signage</li>
+                    <li><strong>Confidence Thresholding:</strong> Only report text with high recognition confidence (>80%) to avoid misreading</li>
+                    <li><strong>Temporal Consistency:</strong> Track text across frames; report only if same text detected in multiple consecutive frames</li>
+                </ol>
+
+                <h4>Performance and Limitations</h4>
+                <ul>
+                    <li><strong>Accuracy:</strong> 90-95% character accuracy for clear, well-lit text; degrades to 60-70% for small or distorted text</li>
+                    <li><strong>Latency:</strong> 100-300 ms for ML Kit, acceptable for navigation but slower than object detection</li>
+                    <li><strong>Failure modes:</strong> Handwritten text, artistic fonts, severe perspective distortion, and low contrast</li>
+                </ul>
+
+                <div class="figure">
+                    <img src="images/ocr-room-number.jpg" alt="OCR detection of room number on door plate" style="max-width: 600px;">
+                    <p class="figure-caption">Figure 4: OCR output showing detected text region (green box) and recognized text "Room 304" with 94% confidence. Source: Google ML Kit demonstration.</p>
+                </div>
+            </div>
+
+            <div class="technique-analysis">
+                <h3>3. Keypoint Detection: Locating Interactive Elements</h3>
+                
+                <h4>Motivation and Challenges</h4>
+                <p>
+                    While object detection localizes large landmarks, blind users require precise localization of small interactive elements to physically engage with the environment:
+                </p>
+                <ul>
+                    <li><strong>Door handles:</strong> Must be located within ±5 cm for successful grasping</li>
+                    <li><strong>Elevator call buttons:</strong> Require precise pointing for activation</li>
+                    <li><strong>Push plates:</strong> Need accurate position for pushing doors open</li>
+                </ul>
+                <p>
+                    These objects are too small for reliable bounding box detection and require <strong>keypoint detection</strong>—predicting precise (x, y) pixel coordinates of specific object parts.
+                </p>
+
+                <h4>Keypoint Detection Architectures</h4>
+                <p>
+                    Keypoint detection methods predict heatmaps indicating the probability of a keypoint at each pixel location:
+                </p>
+
+                <h5>Stacked Hourglass Networks</h5>
+                <p>
+                    Repeated bottom-up, top-down processing to capture both local and global context. Effective but computationally expensive for mobile deployment.
+                </p>
+
+                <h5>MobileNet-Based Keypoint Detectors</h5>
+                <p>
+                    Lightweight alternatives using MobileNet backbones with deconvolutional layers to produce keypoint heatmaps. Achieves 15-25 FPS on mobile devices.
+                </p>
+
+                <h4>Application to Door Handles and Buttons</h4>
+                <p>
+                    For navigation, keypoint detection is applied hierarchically:
+                </p>
+                <ol>
+                    <li><strong>Object detection:</strong> First detect the door or elevator using YOLO</li>
+                    <li><strong>ROI extraction:</strong> Crop the detected region (e.g., right side of door where handle is typically located)</li>
+                    <li><strong>Keypoint detection:</strong> Apply keypoint detector to cropped region to locate handle/button</li>
+                    <li><strong>Depth lookup:</strong> Query depth map at keypoint location to get 3D position</li>
+                    <li><strong>Guidance generation:</strong> Provide audio/haptic guidance: "Door handle is 1.2 meters ahead, at waist height, on the right side"</li>
+                </ol>
+
+                <h4>Training and Performance</h4>
+                <ul>
+                    <li><strong>Dataset requirements:</strong> Annotated images with precise keypoint locations (pixel-level accuracy)</li>
+                    <li><strong>Accuracy:</strong> Typical error of 5-15 pixels (2-8 cm at 2 meters distance)</li>
+                    <li><strong>Detection rate:</strong> 80-90% successful detection when handle is visible and unoccluded</li>
+                    <li><strong>Latency:</strong> 40-60 ms for keypoint detection on cropped region</li>
+                </ul>
+
+                <h4>Limitations</h4>
+                <ul>
+                    <li><strong>Occlusion sensitivity:</strong> Fails when handles are blocked by people or objects</li>
+                    <li><strong>Variety of designs:</strong> Door handles vary widely in shape; requires diverse training data</li>
+                    <li><strong>Distance limitations:</strong> Small objects become too small to detect beyond 3-4 meters</li>
+                </ul>
+
+                <div class="figure">
+                    <img src="images/keypoint-door-handle.jpg" alt="Keypoint detection showing precise location of door handle" style="max-width: 600px;">
+                    <p class="figure-caption">Figure 5: Keypoint detection output showing precise localization of door handle (red dot) within detected door region. Combined with depth data, this enables 3D position guidance for grasping.</p>
+                </div>
+            </div>
+
+            <div class="technique-integration">
+                <h3>Integrated Multi-Technique Pipeline</h3>
+                <p>
+                    Effective navigation systems integrate all three techniques in a coordinated pipeline:
+                </p>
+                <ol>
+                    <li><strong>Object detection (YOLO-Nano):</strong> Runs continuously at 25-40 FPS to detect large landmarks</li>
+                    <li><strong>OCR (ML Kit):</strong> Triggered when door or sign detected; applied to relevant image regions</li>
+                    <li><strong>Keypoint detection:</strong> Activated when user approaches detected landmark (distance < 2 meters)</li>
+                </ol>
+                <p>
+                    This hierarchical approach balances computational efficiency with comprehensive landmark understanding, enabling real-time navigation guidance on resource-constrained mobile devices.
+                </p>
+            </div>
+
+            <div class="quiz-container" id="interactive-quiz">
+                <h3>🎯 Interactive Quiz: Test Your Understanding</h3>
+                <p>Test your knowledge of landmark detection techniques with this 5-question quiz.</p>
+
+                <form id="quiz-form">
+                    <div class="quiz-question">
+                        <h4>Question 1: Which technique is most appropriate for detecting and localizing large architectural features like doors and elevators?</h4>
+                        <ul class="quiz-options">
+                            <li><input type="radio" name="q1" value="a" id="q1a"><label for="q1a">A) Optical Character Recognition (OCR)</label></li>
+                            <li><input type="radio" name="q1" value="b" id="q1b"><label for="q1b">B) Object Detection (YOLO-Nano)</label></li>
+                            <li><input type="radio" name="q1" value="c" id="q1c"><label for="q1c">C) Keypoint Detection</label></li>
+                            <li><input type="radio" name="q1" value="d" id="q1d"><label for="q1d">D) Visual Place Recognition</label></li>
+                        </ul>
+                    </div>
+
+                    <div class="quiz-question">
+                        <h4>Question 2: What is the typical inference speed of YOLO-Nano on mobile devices?</h4>
+                        <ul class="quiz-options">
+                            <li><input type="radio" name="q2" value="a" id="q2a"><label for="q2a">A) 5-10 FPS</label></li>
+                            <li><input type="radio" name="q2" value="b" id="q2b"><label for="q2b">B) 25-40 FPS</label></li>
+                            <li><input type="radio" name="q2" value="c" id="q2c"><label for="q2c">C) 60-120 FPS</label></li>
+                            <li><input type="radio" name="q2" value="d" id="q2d"><label for="q2d">D) 1-3 FPS</label></li>
+                        </ul>
+                    </div>
+
+                    <div class="quiz-question">
+                        <h4>Question 3: Which application is OCR (Optical Character Recognition) primarily used for in indoor navigation?</h4>
+                        <ul class="quiz-options">
+                            <li><input type="radio" name="q3" value="a" id="q3a"><label for="q3a">A) Detecting door handles and elevator buttons</label></li>
+                            <li><input type="radio" name="q3" value="b" id="q3b"><label for="q3b">B) Reading room numbers and directional signage</label></li>
+                            <li><input type="radio" name="q3" value="c" id="q3c"><label for="q3c">C) Measuring distance to landmarks</label></li>
+                            <li><input type="radio" name="q3" value="d" id="q3d"><label for="q3d">D) Recognizing previously visited locations</label></li>
+                        </ul>
+                    </div>
+
+                    <div class="quiz-question">
+                        <h4>Question 4: Why is keypoint detection necessary in addition to object detection?</h4>
+                        <ul class="quiz-options">
+                            <li><input type="radio" name="q4" value="a" id="q4a"><label for="q4a">A) Object detection is too slow for real-time use</label></li>
+                            <li><input type="radio" name="q4" value="b" id="q4b"><label for="q4b">B) Small interactive elements like handles require precise (±5 cm) localization that bounding boxes cannot provide</label></li>
+                            <li><input type="radio" name="q4" value="c" id="q4c"><label for="q4c">C) Keypoint detection works better in low-light conditions</label></li>
+                            <li><input type="radio" name="q4" value="d" id="q4d"><label for="q4d">D) Object detection cannot classify different types of doors</label></li>
+                        </ul>
+                    </div>
+
+                    <div class="quiz-question">
+                        <h4>Question 5: In an integrated navigation pipeline, when is keypoint detection typically activated?</h4>
+                        <ul class="quiz-options">
+                            <li><input type="radio" name="q5" value="a" id="q5a"><label for="q5a">A) Continuously at all times</label></li>
+                            <li><input type="radio" name="q5" value="b" id="q5b"><label for="q5b">B) Only when OCR fails to read text</label></li>
+                            <li><input type="radio" name="q5" value="c" id="q5c"><label for="q5c">C) When the user approaches a detected landmark (distance < 2 meters)</label></li>
+                            <li><input type="radio" name="q5" value="d" id="q5d"><label for="q5d">D) Before object detection to identify regions of interest</label></li>
+                        </ul>
+                    </div>
+
+                    <button type="button" class="quiz-submit" onclick="checkQuiz()">Submit Quiz</button>
+                </form>
+
+                <div id="quiz-result" class="quiz-result"></div>
+            </div>
+        </section>
+
+        <script>
+            function checkQuiz() {
+                const answers = {
+                    q1: 'b',
+                    q2: 'b',
+                    q3: 'b',
+                    q4: 'b',
+                    q5: 'c'
+                };
+
+                const explanations = {
+                    q1: 'Object Detection (YOLO-Nano) is specifically designed to detect and localize large objects like doors and elevators, providing bounding boxes around them.',
+                    q2: 'YOLO-Nano achieves 25-40 FPS on mobile GPUs, making it suitable for real-time navigation applications.',
+                    q3: 'OCR is used to read textual information such as room numbers, exit signs, and directional signage that provide semantic navigation information.',
+                    q4: 'Keypoint detection provides precise pixel-level localization (±5 cm accuracy) needed for small interactive elements like door handles, which bounding boxes cannot provide with sufficient precision.',
+                    q5: 'Keypoint detection is computationally expensive, so it is activated hierarchically only when the user approaches a detected landmark (within 2 meters) where precise interaction guidance is needed.'
+                };
+
+                let score = 0;
+                let totalQuestions = 5;
+                let resultHTML = '<h4>Quiz Results</h4>';
+
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const questionName = 'q' + i;
+                    const selectedAnswer = document.querySelector(`input[name="${questionName}"]:checked`);
+
+                    if (!selectedAnswer) {
+                        resultHTML += `<p><strong>Question ${i}:</strong> Not answered</p>`;
+                        continue;
+                    }
+
+                    const userAnswer = selectedAnswer.value;
+                    const correctAnswer = answers[questionName];
+
+                    if (userAnswer === correctAnswer) {
+                        score++;
+                        resultHTML += `<p><strong>Question ${i}:</strong> ✅ Correct! ${explanations[questionName]}</p>`;
+                    } else {
+                        resultHTML += `<p><strong>Question ${i}:</strong> ❌ Incorrect. ${explanations[questionName]}</p>`;
+                    }
+                }
+
+                const percentage = (score / totalQuestions) * 100;
+                let resultClass = 'incorrect';
+                let resultMessage = '';
+
+                if (percentage >= 80) {
+                    resultClass = 'correct';
+                    resultMessage = `Excellent! You scored ${score}/${totalQuestions} (${percentage}%). You have a strong understanding of landmark detection techniques.`;
+                } else if (percentage >= 60) {
+                    resultClass = 'correct';
+                    resultMessage = `Good job! You scored ${score}/${totalQuestions} (${percentage}%). Review the explanations below to strengthen your understanding.`;
+                } else {
+                    resultMessage = `You scored ${score}/${totalQuestions} (${percentage}%). Please review the material and try again.`;
+                }
+
+                resultHTML = `<p style="font-size: 1.2em; font-weight: bold;">${resultMessage}</p>` + resultHTML;
+
+                const resultDiv = document.getElementById('quiz-result');
+                resultDiv.innerHTML = resultHTML;
+                resultDiv.className = 'quiz-result ' + resultClass;
+                resultDiv.style.display = 'block';
+
+                // Scroll to results
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        </script>
+
+        <div class="navigation-footer">
+            <a href="sensors.html" class="prev-page">← Previous: Sensor Possibilities</a>
+            <a href="context.html" class="next-page">Next: Place Recognition →</a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 Indoor Navigation Tutorial | Graduate-Level Research Review</p>
+    </footer>
+</body>
+</html>
+

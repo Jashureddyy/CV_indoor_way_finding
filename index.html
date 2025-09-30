@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indoor Landmark Wayfinding for Blind Navigation | Introduction</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="nav-header">
+            <h2>Navigation</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Introduction</a></li>
+            <li><a href="sensors.html">Sensor Possibilities</a></li>
+            <li><a href="techniques.html">Detection Techniques</a></li>
+            <li><a href="context.html">Place Recognition</a></li>
+            <li><a href="review.html">Successes & Failures</a></li>
+            <li><a href="future.html">Challenges & Future</a></li>
+            <li><a href="bibliography.html">Bibliography</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <header class="page-header">
+            <h1>Indoor Landmark Wayfinding for Blind Navigation Using Computer Vision</h1>
+            <p class="subtitle">A Graduate-Level Research Tutorial</p>
+        </header>
+
+        <!-- AUDIO PLACEHOLDER: Add a voice track here summarizing the introduction and problem definition -->
+        <div class="audio-container">
+            <audio controls>
+                <source src="audio/page1-intro.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <p class="audio-caption">🔊 Audio Summary (2:30)</p>
+        </div>
+
+        <section class="intro-section">
+            <h2>Introduction and Problem Definition</h2>
+            
+            <div class="problem-statement">
+                <h3>The Navigation Challenge</h3>
+                <p>
+                    Approximately 253 million people worldwide live with visual impairments, with 36 million classified as blind <a href="bibliography.html#ref1" class="citation">[1]</a>. For these individuals, independent navigation represents one of the most significant daily challenges, particularly in unfamiliar indoor environments such as hospitals, universities, shopping centers, and office buildings. While outdoor navigation has been revolutionized by GPS-based systems, indoor wayfinding remains a critical unsolved problem that directly impacts the autonomy, safety, and quality of life for blind and visually impaired persons (BVIPs).
+                </p>
+            </div>
+
+            <div class="gps-limitations">
+                <h3>Why GPS Fails Indoors</h3>
+                <p>
+                    Global Positioning System (GPS) technology, which has become ubiquitous for outdoor navigation, suffers from fundamental limitations in indoor environments:
+                </p>
+                <ul>
+                    <li><strong>Signal Attenuation:</strong> Building materials (concrete, steel, glass) block or severely degrade satellite signals, resulting in positioning errors of 10-50 meters or complete signal loss.</li>
+                    <li><strong>Multipath Interference:</strong> Indoor reflections cause GPS signals to arrive via multiple paths, creating positioning ambiguities that cannot be resolved with standard receivers.</li>
+                    <li><strong>Insufficient Granularity:</strong> Even under optimal conditions, GPS accuracy (3-10 meters) is inadequate for indoor navigation, where users need centimeter-level precision to locate doors, elevator buttons, and room numbers.</li>
+                    <li><strong>Lack of Vertical Resolution:</strong> GPS cannot reliably distinguish between building floors, making multi-story navigation impossible.</li>
+                </ul>
+            </div>
+
+            <div class="landmark-importance">
+                <h3>The Critical Role of Landmark Detection</h3>
+                <p>
+                    Indoor navigation for BVIPs fundamentally depends on the accurate detection and localization of specific architectural landmarks:
+                </p>
+                <ul>
+                    <li><strong>Doors:</strong> Entry and exit points that define room boundaries and navigation waypoints</li>
+                    <li><strong>Elevators:</strong> Critical for vertical navigation in multi-story buildings</li>
+                    <li><strong>Stairs and Escalators:</strong> Alternative vertical navigation paths that require advance warning</li>
+                    <li><strong>Exit Signs:</strong> Essential for emergency egress and building orientation</li>
+                    <li><strong>Room Numbers and Signage:</strong> Provide precise location confirmation and destination identification</li>
+                    <li><strong>Interactive Elements:</strong> Door handles, elevator call buttons, and push plates that require precise spatial localization for physical interaction</li>
+                </ul>
+                <p>
+                    The ability to detect, classify, and measure distance to these landmarks in real-time forms the foundation of any effective indoor navigation system for blind users.
+                </p>
+            </div>
+
+            <div class="existing-approaches">
+                <h3>Survey of Non-Vision Approaches and Their Limitations</h3>
+                
+                <h4>Bluetooth Low Energy (BLE) Beacons</h4>
+                <p>
+                    BLE beacon systems deploy fixed transmitters throughout a building that broadcast unique identifiers. User devices estimate position through received signal strength indication (RSSI) trilateration <a href="bibliography.html#ref3" class="citation">[3]</a>.
+                </p>
+                <p><strong>Limitations:</strong></p>
+                <ul>
+                    <li><strong>Infrastructure Dependency:</strong> Requires extensive pre-installation of beacons (typically one every 5-10 meters), making deployment expensive and limiting scalability to new environments.</li>
+                    <li><strong>Positioning Accuracy:</strong> RSSI-based localization achieves only 2-5 meter accuracy due to signal variability from human bodies, furniture, and environmental factors.</li>
+                    <li><strong>No Landmark Information:</strong> Beacons provide only position estimates, not semantic information about nearby doors, elevators, or interactive elements.</li>
+                    <li><strong>Maintenance Burden:</strong> Battery replacement and system updates require ongoing facility management commitment.</li>
+                </ul>
+
+                <h4>Radio-Frequency Identification (RFID)</h4>
+                <p>
+                    RFID systems use passive or active tags embedded in the environment, which are detected by readers carried by users. Tags can be placed on doors, walls, and other landmarks to provide location context.
+                </p>
+                <p><strong>Limitations:</strong></p>
+                <ul>
+                    <li><strong>Read Range Constraints:</strong> Passive RFID tags have detection ranges of only 1-3 meters, requiring users to be very close to landmarks before detection occurs.</li>
+                    <li><strong>Orientation Sensitivity:</strong> Tag detection is highly dependent on reader-tag orientation, leading to missed detections.</li>
+                    <li><strong>Environmental Modification:</strong> Like beacons, RFID requires physical modification of buildings, limiting applicability to public spaces and unfamiliar environments.</li>
+                    <li><strong>Coarse Spatial Information:</strong> RFID provides binary detection (tag present/absent) but no precise distance or angular information needed for approach guidance.</li>
+                </ul>
+
+                <h4>WiFi Fingerprinting</h4>
+                <p>
+                    WiFi positioning systems create databases of signal strength patterns at known locations, then match observed patterns to estimate position.
+                </p>
+                <p><strong>Limitations:</strong></p>
+                <ul>
+                    <li><strong>Calibration Overhead:</strong> Requires extensive site surveys to build fingerprint databases, which must be updated when access points change.</li>
+                    <li><strong>Accuracy Variability:</strong> Positioning accuracy degrades to 5-15 meters in complex environments with signal interference.</li>
+                    <li><strong>Dynamic Environment Sensitivity:</strong> Crowd density and furniture rearrangement alter signal propagation, degrading performance.</li>
+                    <li><strong>No Object-Level Information:</strong> Cannot detect or localize specific landmarks like doors or elevator buttons.</li>
+                </ul>
+            </div>
+
+            <div class="cv-advantages">
+                <h3>The Computer Vision Advantage</h3>
+                <p>
+                    Computer vision (CV) approaches offer transformative advantages over infrastructure-based systems:
+                </p>
+                <ul>
+                    <li><strong>Zero Infrastructure:</strong> CV systems require no environmental modification, enabling immediate deployment in any building.</li>
+                    <li><strong>Semantic Understanding:</strong> Deep learning models can identify and classify specific landmarks (doors, elevators, signs) with high accuracy.</li>
+                    <li><strong>Precise Localization:</strong> Depth sensors and stereo vision provide centimeter-level distance measurements to detected objects.</li>
+                    <li><strong>Rich Spatial Information:</strong> CV systems deliver 3D position, orientation, and size information for navigation guidance.</li>
+                    <li><strong>Text Reading Capability:</strong> Optical character recognition (OCR) enables reading of room numbers, directional signs, and labels without any special encoding.</li>
+                    <li><strong>Scalability:</strong> Once trained, CV models work in any environment without site-specific calibration.</li>
+                </ul>
+                <p>
+                    This tutorial explores how modern computer vision techniques—including object detection, text recognition, keypoint detection, and visual place recognition—can be integrated into smartphone-based systems to provide real-time, accurate, and infrastructure-free indoor navigation for blind users.
+                </p>
+            </div>
+        </section>
+
+        <div class="navigation-footer">
+            <a href="sensors.html" class="next-page">Next: Sensor Possibilities →</a>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 Indoor Navigation Tutorial | Graduate-Level Research Review</p>
+    </footer>
+</body>
+</html>
+
