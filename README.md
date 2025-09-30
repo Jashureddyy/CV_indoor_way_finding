@@ -2,42 +2,6 @@
 
 A comprehensive, graduate-level web tutorial on computer vision techniques for indoor navigation assistance for blind and visually impaired persons.
 
-## 🌐 GitHub Pages Deployment
-
-This tutorial is designed to be deployed on GitHub Pages. Follow these steps:
-
-### Quick Deployment
-
-1. **Create a new GitHub repository**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: Indoor Navigation Tutorial"
-   git branch -M main
-   git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO-NAME.git
-   git push -u origin main
-   ```
-
-2. **Enable GitHub Pages**
-   - Go to your repository on GitHub
-   - Navigate to Settings → Pages
-   - Under "Source", select "main" branch
-   - Click "Save"
-   - Your site will be published at: `https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/`
-
-### Local Testing
-
-To test the website locally before deployment:
-
-```bash
-# Option 1: Using Python's built-in server
-python3 -m http.server 8000
-
-# Option 2: Using Node.js http-server
-npx http-server
-
-# Then open: http://localhost:8000
-```
 
 ## 📁 Project Structure
 
@@ -64,9 +28,9 @@ Cvproject-1/
 └── README.md               # This file
 ```
 
-## 🎨 Features
+## Features
 
-### ✅ Complete Requirements Implementation
+
 
 - **Navigation**: Persistent sidebar navigation on all pages
 - **Graduate-Level Content**: Detailed technical analysis of CV techniques
@@ -77,7 +41,7 @@ Cvproject-1/
 - **Audio Placeholders**: Clear instructions on each page for voice track addition
 - **Professional Design**: Clean, accessible, responsive layout
 
-### 📊 Content Coverage
+### Content Coverage
 
 1. **Introduction** - Problem definition, GPS limitations, CV advantages
 2. **Sensors** - RGB cameras, ARCore Depth API, LiDAR, IMU analysis
@@ -87,7 +51,7 @@ Cvproject-1/
 6. **Future** - Technical challenges, edge AI, AR glasses integration
 7. **Bibliography** - 5 primary references + additional resources
 
-## 🖼️ Adding Images
+## Adding Images
 
 The tutorial references 9 images. You need to add these to the `images/` directory:
 
@@ -113,38 +77,10 @@ You can obtain appropriate images from:
 - **Stock photos**: Unsplash, Pexels (search: "hallway", "door", "elevator")
 - **Placeholder service**: Use https://placehold.co/700x400 temporarily
 
-### Quick Placeholder Setup
-
-If you want to deploy immediately with placeholders:
-
-```bash
-cd images
-# Download placeholder images (700x400 pixels)
-curl -o rgb-camera-detection.jpg "https://placehold.co/700x400/3498db/ffffff?text=RGB+Camera+Detection"
-curl -o depth-map-visualization.jpg "https://placehold.co/700x400/2ecc71/ffffff?text=Depth+Map"
-curl -o yolo-detection-example.jpg "https://placehold.co/700x400/e74c3c/ffffff?text=YOLO+Detection"
-curl -o ocr-room-number.jpg "https://placehold.co/600x400/f39c12/ffffff?text=OCR+Output"
-curl -o keypoint-door-handle.jpg "https://placehold.co/600x400/9b59b6/ffffff?text=Keypoint+Detection"
-curl -o vpr-matching.jpg "https://placehold.co/700x400/1abc9c/ffffff?text=VPR+Matching"
-curl -o landmark-graph.jpg "https://placehold.co/700x400/34495e/ffffff?text=Landmark+Graph"
-curl -o navcog-interface.jpg "https://placehold.co/600x400/16a085/ffffff?text=NavCog+Interface"
-curl -o seeing-ai-output.jpg "https://placehold.co/600x400/2980b9/ffffff?text=Seeing+AI"
-```
-
-## 🔊 Adding Audio Tracks
-
-Each HTML page contains an audio placeholder section. To add voice summaries:
+## Adding Audio Tracks
 
 1. **Record audio** for each page summarizing the content (2-3 minutes each)
 2. **Save as MP3** files: `intro-audio.mp3`, `sensors-audio.mp3`, etc.
-3. **Replace placeholder** with HTML5 audio element:
-
-```html
-<audio controls style="width: 100%; margin: 20px 0;">
-    <source src="audio/intro-audio.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
-</audio>
-```
 
 ### Audio Content Guidelines
 
@@ -156,7 +92,7 @@ Each HTML page contains an audio placeholder section. To add voice summaries:
 - **Future**: Technical challenges, edge AI, AR glasses potential
 - **Bibliography**: Overview of key references
 
-## 🎯 Interactive Quiz
+## Interactive Quiz
 
 The `techniques.html` page includes a 5-question multiple-choice quiz testing understanding of:
 - Object detection vs. OCR vs. keypoint detection
@@ -167,14 +103,14 @@ The `techniques.html` page includes a 5-question multiple-choice quiz testing un
 
 The quiz provides immediate feedback and explanations for each answer.
 
-## 📱 Responsive Design
+## Responsive Design
 
 The tutorial is fully responsive and works on:
 - Desktop computers (optimal experience)
 - Tablets (sidebar collapses to top navigation)
 - Smartphones (single-column layout)
 
-## ♿ Accessibility Features
+## Accessibility Features
 
 - Semantic HTML structure
 - High contrast color scheme
@@ -182,7 +118,7 @@ The tutorial is fully responsive and works on:
 - Keyboard navigation support
 - Audio content placeholders for screen reader users
 
-## 📚 Academic Standards
+## Academic Standards
 
 - **Graduate-level detail**: Technical depth appropriate for MS/PhD students
 - **Proper citations**: All claims linked to bibliography
@@ -190,7 +126,7 @@ The tutorial is fully responsive and works on:
 - **Critical analysis**: Balanced discussion of successes and failures
 - **Future directions**: Research-oriented discussion of open problems
 
-## 🔗 References
+## References
 
 All references are fully annotated in `bibliography.html` with:
 - Complete citation information
@@ -198,48 +134,10 @@ All references are fully annotated in `bibliography.html` with:
 - Reliability assessment
 - DOI/URL links where applicable
 
-## 📝 Estimated Reading Time
+## Estimated Reading Time
 
 - **Total content**: 15-30 minutes for complete tutorial
 - **Per page**: 2-5 minutes average
 - **With audio**: 30-45 minutes total
 
-## 🛠️ Customization
-
-### Changing Colors
-
-Edit `styles.css` CSS variables:
-
-```css
-:root {
-    --primary-color: #2c3e50;    /* Main headings, sidebar */
-    --secondary-color: #3498db;   /* Links, accents */
-    --accent-color: #e74c3c;      /* Highlights */
-}
-```
-
-### Adding Pages
-
-1. Create new HTML file following existing structure
-2. Add navigation link to all pages' sidebar
-3. Update navigation footer links
-4. Add audio placeholder section
-
-## 📄 License
-
-This educational tutorial is provided for academic use. Please cite appropriately if using in research or educational contexts.
-
-## 👥 Credits
-
-Tutorial created for Project 1: Research Tutorial on Computer Vision for Accessibility.
-
-## 📧 Support
-
-For questions or issues with deployment, please refer to:
-- [GitHub Pages Documentation](https://docs.github.com/en/pages)
-- [HTML/CSS/JS Resources](https://developer.mozilla.org/en-US/)
-
----
-
-**Note**: This tutorial meets all Project 1 requirements including navigation, graduate-level content, algorithm presentation, mixed media, interactivity, annotated bibliography, and professional presentation.
 
